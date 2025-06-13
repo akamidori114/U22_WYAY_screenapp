@@ -15,7 +15,7 @@
       </SelectionState>
       <SelectionState runConfigName="Screen_app_U22">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-06-12T02:03:36.614167Z">
+        <DropdownSelection timestamp="2025-06-13T02:07:42.829386400Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\hirom\.android\avd\Pixel_9.avd" />
