@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 class DailyUsageDetailsActivity : AppCompatActivity() {
@@ -17,14 +18,12 @@ class DailyUsageDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_daily_usage_details)
 
-        val toolbar = findViewById<MaterialToolbar>(R.id.detailsToolbar) // XML側でIDをdetailsToolbarとする
+        val toolbar = findViewById<MaterialToolbar>(R.id.detailsToolbar)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = if (this is DailyUsageDetailsActivity) "今日のアプリ利用履歴" else "今週のアプリ利用履歴"
 
-        // アクションバーにタイトルを設定 (オプション)
+        // ▼▼▼ タイトル設定を修正 ▼▼▼
         supportActionBar?.title = "今日のアプリ利用履歴"
-        supportActionBar?.setDisplayHomeAsUpEnabled(true) // 戻るボタン
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         usageHelper = UsageStatsHelper(this)
         dailyUsageRecyclerView = findViewById(R.id.dailyUsageRecyclerView)
@@ -35,7 +34,13 @@ class DailyUsageDetailsActivity : AppCompatActivity() {
 
     private fun displayDailyUsageDetails() {
         val endTime = System.currentTimeMillis()
-        val startTime = endTime - TimeUnit.DAYS.toMillis(1) // 過去24時間
+        // ▼▼▼ 開始時刻を「今日の0時」に変更 ▼▼▼
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startTime = calendar.timeInMillis
 
         val dailyStatsRaw = usageHelper.getAppUsageStats(startTime, endTime)
         val displayList = dailyStatsRaw.mapNotNull { stat ->
@@ -43,8 +48,8 @@ class DailyUsageDetailsActivity : AppCompatActivity() {
                 AppUsageDisplayItem(stat.packageName, appName, stat.totalTimeInForeground)
             }
         }
-            .filter { it.totalTimeInForeground > 0 } // 利用時間があるもののみ
-            .sortedByDescending { it.totalTimeInForeground } // 利用時間が多い順
+            .filter { it.totalTimeInForeground > 0 }
+            .sortedByDescending { it.totalTimeInForeground }
 
         val adapter = UsageListAdapter(this, displayList)
         dailyUsageRecyclerView.adapter = adapter
@@ -60,7 +65,6 @@ class DailyUsageDetailsActivity : AppCompatActivity() {
         }
     }
 
-    // アクションバーの戻るボタンの処理
     override fun onSupportNavigateUp(): Boolean {
         onBackPressedDispatcher.onBackPressed()
         return true

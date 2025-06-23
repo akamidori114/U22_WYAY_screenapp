@@ -18,11 +18,10 @@ class WeeklyUsageDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weekly_usage_details)
 
-        val toolbar = findViewById<MaterialToolbar>(R.id.detailsToolbar) // XML側でIDをdetailsToolbarとする
+        val toolbar = findViewById<MaterialToolbar>(R.id.detailsToolbar)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = if (this is WeeklyUsageDetailsActivity) "今日のアプリ利用履歴" else "今週のアプリ利用履歴"
 
+        // ▼▼▼ タイトル設定を修正 ▼▼▼
         supportActionBar?.title = "今週のアプリ利用履歴"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -35,18 +34,17 @@ class WeeklyUsageDetailsActivity : AppCompatActivity() {
 
     private fun displayWeeklyUsageDetails() {
         val calendar = Calendar.getInstance()
-        // 週の終わりを現在時刻とする
         val endTime = System.currentTimeMillis()
-        // 週の始まりを計算 (例: 今日の日付から過去6日前の0時0分0秒)
-        // または、カレンダーの週の始まり（通常は日曜日）に設定
-        calendar.add(Calendar.DAY_OF_YEAR, -6) // 過去7日間（今日を含む）
+
+        // ▼▼▼ 開始時刻を「今週の月曜0時」に変更 ▼▼▼
+        calendar.firstDayOfWeek = Calendar.MONDAY
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
         val startTime = calendar.timeInMillis
 
-        // INTERVAL_DAILYで過去7日分を取得し、アプリごとに集計
         val dailyStatsOverWeek = usageHelper.getAppUsageStats(startTime, endTime)
 
         val weeklyAggregatedStats = mutableMapOf<String, Long>()
