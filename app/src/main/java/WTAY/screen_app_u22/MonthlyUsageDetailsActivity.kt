@@ -1,59 +1,55 @@
 package WTAY.screen_app_u22
 
-import com.google.android.material.appbar.MaterialToolbar
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.appbar.MaterialToolbar
 import java.util.*
-import java.util.concurrent.TimeUnit
 
-class WeeklyUsageDetailsActivity : AppCompatActivity() {
+class MonthlyUsageDetailsActivity : AppCompatActivity() {
 
     private lateinit var usageHelper: UsageStatsHelper
-    private lateinit var weeklyUsageRecyclerView: RecyclerView
+    private lateinit var monthlyUsageRecyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_weekly_usage_details)
+        setContentView(R.layout.activity_monthly_usage_details)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.detailsToolbar)
         setSupportActionBar(toolbar)
-
-        // ▼▼▼ タイトル設定を修正 ▼▼▼
-        supportActionBar?.title = "今週のアプリ利用履歴"
+        supportActionBar?.title = "今月のアプリ利用履歴"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         usageHelper = UsageStatsHelper(this)
-        weeklyUsageRecyclerView = findViewById(R.id.weeklyUsageRecyclerView)
-        weeklyUsageRecyclerView.layoutManager = LinearLayoutManager(this)
+        monthlyUsageRecyclerView = findViewById(R.id.monthlyUsageRecyclerView)
+        monthlyUsageRecyclerView.layoutManager = LinearLayoutManager(this)
 
-        displayWeeklyUsageDetails()
+        displayMonthlyUsageDetails()
     }
 
-    private fun displayWeeklyUsageDetails() {
+    private fun displayMonthlyUsageDetails() {
         val calendar = Calendar.getInstance()
         val endTime = System.currentTimeMillis()
 
-        // ▼▼▼ 開始時刻を「今週の月曜0時」に変更 ▼▼▼
-        calendar.firstDayOfWeek = Calendar.MONDAY
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        // 開始時刻を「今月の1日0時」に設定
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
         val startTime = calendar.timeInMillis
 
-        val dailyStatsOverWeek = usageHelper.getAppUsageStats(startTime, endTime)
+        val dailyStatsOverMonth = usageHelper.getAppUsageStats(startTime, endTime)
 
-        val weeklyAggregatedStats = mutableMapOf<String, Long>()
-        dailyStatsOverWeek.forEach { stat ->
-            val currentTotal = weeklyAggregatedStats.getOrDefault(stat.packageName, 0L)
-            weeklyAggregatedStats[stat.packageName] = currentTotal + stat.totalTimeInForeground
+        val monthlyAggregatedStats = mutableMapOf<String, Long>()
+        dailyStatsOverMonth.forEach { stat ->
+            val currentTotal = monthlyAggregatedStats.getOrDefault(stat.packageName, 0L)
+            monthlyAggregatedStats[stat.packageName] = currentTotal + stat.totalTimeInForeground
         }
 
-        val displayList = weeklyAggregatedStats.mapNotNull { entry ->
+        val displayList = monthlyAggregatedStats.mapNotNull { entry ->
             getAppNameFromPackage(entry.key)?.let { appName ->
                 AppUsageDisplayItem(entry.key, appName, entry.value)
             }
@@ -62,7 +58,7 @@ class WeeklyUsageDetailsActivity : AppCompatActivity() {
             .sortedByDescending { it.totalTimeInForeground }
 
         val adapter = UsageListAdapter(this, displayList)
-        weeklyUsageRecyclerView.adapter = adapter
+        monthlyUsageRecyclerView.adapter = adapter
     }
 
     private fun getAppNameFromPackage(packageName: String): String? {

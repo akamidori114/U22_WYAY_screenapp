@@ -43,7 +43,7 @@
                 android:textColor="?attr/colorPrimary"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
-            android:layout_marginBottom="32dp"/>
+                android:layout_marginBottom="32dp"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/dailyUsageDetailsButton"
@@ -62,6 +62,17 @@
                 app:icon="@drawable/ic_event_note_24"
                 android:text="今週の利用状況詳細"
                 android:layout_marginBottom="16dp"/>
+
+            <!-- ▼▼▼ ここから追加 ▼▼▼ -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/monthlyUsageDetailsButton"
+                style="@style/Widget.App.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_event_note_24"
+                android:text="今月の利用状況詳細"
+                android:layout_marginBottom="16dp"/>
+            <!-- ▲▲▲ ここまで追加 ▲▲▲ -->
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
