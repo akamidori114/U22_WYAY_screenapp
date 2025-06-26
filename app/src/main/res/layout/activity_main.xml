@@ -32,7 +32,7 @@
             android:paddingStart="24dp"
             android:paddingEnd="24dp"
             android:paddingBottom="24dp"
-            android:paddingTop="24dp"> <!-- paddingTopは24dpに戻しています -->
+            android:paddingTop="24dp">
 
             <TextView
                 android:id="@+id/titleText"
@@ -63,7 +63,6 @@
                 android:text="今週の利用状況詳細"
                 android:layout_marginBottom="16dp"/>
 
-            <!-- ▼▼▼ ここから追加 ▼▼▼ -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/monthlyUsageDetailsButton"
                 style="@style/Widget.App.Button"
@@ -72,7 +71,6 @@
                 app:icon="@drawable/ic_event_note_24"
                 android:text="今月の利用状況詳細"
                 android:layout_marginBottom="16dp"/>
-            <!-- ▲▲▲ ここまで追加 ▲▲▲ -->
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -80,7 +78,7 @@
                 app:cardElevation="2dp"
                 app:cardCornerRadius="12dp"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="32dp">
+                android:layout_marginBottom="16dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -102,11 +100,105 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/highlightCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="12dp"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"
+                tools:visibility="visible">
 
-            <View
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1"/> <!-- 残りスペースを埋める -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="今日のハイライト"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:layout_marginBottom="16dp"/>
+
+                    <!-- 最多起動アプリ -->
+                    <LinearLayout
+                        android:id="@+id/mostLaunchedLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_update_24"
+                            app:tint="?attr/colorPrimary"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="一番起動したアプリ"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"
+                            android:layout_marginStart="8dp"/>
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"/>
+
+                        <TextView
+                            android:id="@+id/mostLaunchedAppName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="アプリ名 (15回)"
+                            android:textStyle="bold"
+                            android:textAppearance="?attr/textAppearanceBodyMedium"/>
+                    </LinearLayout>
+
+                    <!-- 時間帯別利用 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="時間帯ごとの利用"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/timeSlotMorning"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/ic_event_note_24"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        tools:text="朝：YouTube (1時間20分)"
+                        android:layout_marginBottom="4dp"/>
+
+                    <TextView
+                        android:id="@+id/timeSlotDay"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/ic_event_note_24"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        tools:text="昼：X (45分)"
+                        android:layout_marginBottom="4dp"/>
+
+                    <TextView
+                        android:id="@+id/timeSlotNight"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/ic_event_note_24"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        tools:text="夜：Netflix (2時間5分)"/>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
 
             <com.google.android.material.button.MaterialButton
@@ -117,7 +209,17 @@
                 android:layout_gravity="center_horizontal"
                 android:text="使用状況を更新"
                 app:icon="@drawable/ic_update_24"
+                android:layout_marginTop="32dp"
                 android:layout_marginBottom="8dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/alertSettingsButton"
+                style="@style/Widget.App.Button.Text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                app:icon="@drawable/ic_alert_24"
+                android:text="アラートを設定"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/permissionButton"

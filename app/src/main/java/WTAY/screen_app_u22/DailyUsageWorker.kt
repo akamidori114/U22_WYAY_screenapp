@@ -11,13 +11,11 @@ class DailyUsageWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            // Helperクラスを呼び出して、累計時間を更新する
             val usageHelper = UsageStatsHelper(applicationContext)
+            // suspend関数をそのまま呼び出す
             usageHelper.updateCumulativeUsage()
-            // 処理成功
             Result.success()
         } catch (e: Exception) {
-            // 処理失敗
             Result.failure()
         }
     }
