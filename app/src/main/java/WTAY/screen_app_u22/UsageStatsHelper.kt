@@ -1,83 +1,167 @@
 package WTAY.screen_app_u22
 
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
-import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class UsageStatsHelper(private val context: Context) {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences("usage_data", Context.MODE_PRIVATE)
-
-    companion object {
-        // 最後に累計を更新した時刻を保存するためのキー
-        const val KEY_LAST_CUMULATIVE_UPDATE_TIMESTAMP = "last_cumulative_update_timestamp"
-    }
+    private val dataStore = AppDataStore(context)
+    private val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+    private val packageManager: PackageManager = context.packageManager
 
     fun getAppUsageStats(startTime: Long, endTime: Long): List<UsageStats> {
-        val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val stats = usageStatsManager.queryUsageStats(
+        return usageStatsManager.queryUsageStats(
             UsageStatsManager.INTERVAL_DAILY,
             startTime,
             endTime
-        )
-        return stats.filter { it.totalTimeInForeground > 0 }
+        ).filter { it.totalTimeInForeground > 0 }
     }
 
-    // 累計利用時間を更新するメソッド (このメソッドがメインのロジック)
-    fun updateCumulativeUsage() {
-        val lastUpdateTime = prefs.getLong(KEY_LAST_CUMULATIVE_UPDATE_TIMESTAMP, 0L)
+    suspend fun updateCumulativeUsage() {
+        val lastUpdateTime = dataStore.getLastUpdateTime()
         val currentTime = System.currentTimeMillis()
 
-        // 初回起動時（lastUpdateTimeが0）は、過去24時間分を初期データとする
         val startTime = if (lastUpdateTime == 0L) {
             currentTime - TimeUnit.DAYS.toMillis(1)
         } else {
             lastUpdateTime
         }
 
-        // 最後に更新してから1分も経っていなければ処理をスキップ (頻繁な更新を防ぐため)
         if (currentTime - startTime < TimeUnit.MINUTES.toMillis(1)) {
             return
         }
 
         val stats = getAppUsageStats(startTime, currentTime)
         if (stats.isEmpty()) {
-            // 更新するデータがない場合でも、タイムスタンプは更新して終了
-            prefs.edit().putLong(KEY_LAST_CUMULATIVE_UPDATE_TIMESTAMP, currentTime).apply()
+            dataStore.saveUsageData(emptyMap(), currentTime)
             return
         }
 
-        val editor = prefs.edit()
+        val currentData = dataStore.getAllUsageData().toMutableMap()
+        currentData.remove(AppDataStore.KEY_LAST_UPDATE.name)
+
+
         stats.forEach { stat ->
-            if (stat.totalTimeInForeground > 0) {
-                // SharedPreferencesに保存されている累計時間に、新しい利用時間を加算
-                val currentTotal = prefs.getLong(stat.packageName, 0L)
-                editor.putLong(stat.packageName, currentTotal + stat.totalTimeInForeground)
-            }
+            val currentTotal = currentData.getOrDefault(stat.packageName, 0L)
+            currentData[stat.packageName] = currentTotal + stat.totalTimeInForeground
         }
 
-        // 最終更新時刻を現在時刻で保存
-        editor.putLong(KEY_LAST_CUMULATIVE_UPDATE_TIMESTAMP, currentTime)
-        editor.apply()
+        dataStore.saveUsageData(currentData, currentTime)
     }
 
-
-    // 全アプリの累計利用時間の合計を取得する関数
-    fun getAllAppsTotalUsageTime(): Long {
+    suspend fun getAllAppsTotalUsageTime(): Long {
+        val allData = dataStore.getAllUsageData()
         var totalTime = 0L
-        prefs.all.forEach { (key, value) ->
-            // 値がLong型で、かつタイムスタンプのキーでなければ加算対象とする
-            if (value is Long && key != KEY_LAST_CUMULATIVE_UPDATE_TIMESTAMP) {
+        allData.forEach { (key, value) ->
+            if (key != AppDataStore.KEY_LAST_UPDATE.name) {
                 totalTime += value
             }
         }
         return totalTime
     }
 
-    // 特定のアプリの累計利用時間を取得する関数
-    fun getTotalUsageTimeForApp(appPackage: String): Long {
-        return prefs.getLong(appPackage, 0L)
+    /**
+     * 今日のハイライト（最多起動アプリ、時間帯別最長利用アプリ）を分析する
+     */
+    suspend fun analyzeTodayHighlights(): TodayHighlight {
+        return withContext(Dispatchers.IO) {
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val startTime = calendar.timeInMillis
+            val endTime = System.currentTimeMillis()
+
+            val usageEvents = usageStatsManager.queryEvents(startTime, endTime)
+
+            val launchCounts = mutableMapOf<String, Int>()
+            val usageTimeBySlot = mapOf(
+                "morning" to mutableMapOf<String, Long>(),
+                "day" to mutableMapOf<String, Long>(),
+                "night" to mutableMapOf<String, Long>()
+            )
+            val appForegroundTimestamps = mutableMapOf<String, Long>()
+
+            while (usageEvents.hasNextEvent()) {
+                val event = UsageEvents.Event()
+                usageEvents.getNextEvent(event)
+
+                if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                    val count = launchCounts.getOrDefault(event.packageName, 0)
+                    launchCounts[event.packageName] = count + 1
+                }
+
+                when (event.eventType) {
+                    UsageEvents.Event.MOVE_TO_FOREGROUND -> {
+                        appForegroundTimestamps[event.packageName] = event.timeStamp
+                    }
+                    UsageEvents.Event.MOVE_TO_BACKGROUND -> {
+                        val foregroundTime = appForegroundTimestamps[event.packageName]
+                        if (foregroundTime != null) {
+                            val duration = event.timeStamp - foregroundTime
+                            if (duration > 0) {
+                                val slot = getTimeSlot(foregroundTime)
+                                val currentDuration = usageTimeBySlot[slot]!!.getOrDefault(event.packageName, 0L)
+                                usageTimeBySlot[slot]!![event.packageName] = currentDuration + duration
+                            }
+                            appForegroundTimestamps.remove(event.packageName)
+                        }
+                    }
+                }
+            }
+
+            val mostLaunchedEntry = launchCounts.maxByOrNull { it.value }
+            val mostLaunchedApp = mostLaunchedEntry?.let {
+                AppInfo(
+                    packageName = it.key,
+                    appName = getAppName(it.key),
+                    launchCount = it.value
+                )
+            }
+
+            val morningTop = getTopAppForSlot(usageTimeBySlot["morning"])
+            val dayTop = getTopAppForSlot(usageTimeBySlot["day"])
+            val nightTop = getTopAppForSlot(usageTimeBySlot["night"])
+            val timeSlotUsage = TimeSlotUsage(morningTop, dayTop, nightTop)
+
+            TodayHighlight(mostLaunchedApp, timeSlotUsage)
+        }
+    }
+
+    private fun getTimeSlot(timestamp: Long): String {
+        val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
+        return when (calendar.get(Calendar.HOUR_OF_DAY)) {
+            in 5..11 -> "morning"
+            in 12..17 -> "day"
+            else -> "night"
+        }
+    }
+
+    private fun getTopAppForSlot(usageMap: Map<String, Long>?): AppInfo? {
+        val topEntry = usageMap?.maxByOrNull { it.value }
+        return topEntry?.let {
+            AppInfo(
+                packageName = it.key,
+                appName = getAppName(it.key),
+                usageTime = it.value
+            )
+        }
+    }
+
+    private fun getAppName(packageName: String): String {
+        return try {
+            val appInfo = packageManager.getApplicationInfo(packageName, 0)
+            packageManager.getApplicationLabel(appInfo).toString()
+        } catch (e: PackageManager.NameNotFoundException) {
+            packageName
+        }
     }
 }
