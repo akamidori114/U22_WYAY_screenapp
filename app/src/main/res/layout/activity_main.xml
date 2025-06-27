@@ -218,7 +218,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                app:icon="@drawable/ic_alert_24"
+                app:icon="@android:drawable/ic_dialog_alert"
                 android:text="アラートを設定"/>
 
             <com.google.android.material.button.MaterialButton
