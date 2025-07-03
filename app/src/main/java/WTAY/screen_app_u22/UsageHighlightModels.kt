@@ -20,3 +20,8 @@ data class TodayHighlight(
     val mostLaunchedApp: AppInfo?,
     val timeSlotUsage: TimeSlotUsage
 )
+
+data class SimpleUsageStat(
+    val packageName: String,
+    val totalTimeInForeground: Long
+)

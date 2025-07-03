@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:fitsSystemWindows="true"
     android:background="?attr/colorSurface"
     tools:context=".DailyUsageDetailsActivity">
 
+    <!-- 1. AppBar (タイトル) -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/Theme.screen_app_u22.Toolbar">
+        android:layout_height="wrap_content">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/detailsToolbar"
@@ -20,14 +21,57 @@
             app:navigationIcon="@drawable/ic_arrow_back_24" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/dailyUsageRecyclerView"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
-    android:clipToPadding="false"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:listitem="@layout/item_usage_stat"/>
+    <!-- ▼▼▼ 全体をScrollViewで囲む ▼▼▼ -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 2. タイトル「詳細データ」 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="今日のアプリ使用比率"
+                android:textAppearance="?attr/textAppearanceTitleLarge"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- 3. 円グラフ -->
+            <com.github.mikephil.charting.charts.PieChart
+                android:id="@+id/pieChart"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="使用時間リスト"
+                android:textAppearance="?attr/textAppearanceTitleLarge"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- 4. 利用履歴リスト -->
+            <!-- 重要：layout_heightを "wrap_content" に変更し、layout_weightを削除 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/dailyUsageRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingBottom="16dp"
+                tools:listitem="@layout/item_usage_stat"/>
+
+        </LinearLayout>
+    </ScrollView>
+    <!-- ▲▲▲ ScrollViewここまで ▲▲▲ -->
+
+</LinearLayout>

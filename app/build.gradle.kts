@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "WTAY.screen_app_u22"
-        minSdk = 35
-        targetSdk = 35
+        minSdk = 26
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -65,4 +65,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
